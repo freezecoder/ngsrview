@@ -1,6 +1,9 @@
 # ngsrview
 Simple file format viewer for NGS variant data
 
+
+![Screenshot](/appview_ngsrview.png)
+
 Description
 ================
 
