@@ -36,7 +36,6 @@ genericNGSTestApp()
 
 Open a browser to the port the shiny app is running, then upload some files.
 
-
-[I'm a relative reference to a repository file](../blob/master/LICENSE)
+Download  [this](inst/extdata/sample_vtable.tsv) input file and use it as an input to the viewer.
 
 
