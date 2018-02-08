@@ -43,6 +43,13 @@ genericNGSUI<-function(id){
 }
 
 genericNGSTestApp<-function(){
+  library(shiny)
+  library(DT)
+  library(shinyjs)
+  library(data.table)
+  library(googleVis)
+  library(ggplot2)
+  library(rjson)
   options(shiny.maxRequestSize=100*1024^2) 
   choices=c("guess","csv","vtbl","html","pdf","vcf","vcf.gz","tsv")
   
@@ -225,7 +232,6 @@ output$fileViewPage<-renderUI({
 			singleton(tags$head(tags$link(href='https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.2/css/AdminLTE.min.css',rel='stylesheet',type='text/css'))),
 			singleton(tags$head(tags$script(src = "https://cdnjs.cloudflare.com/ajax/libs/notify/0.4.2/notify.min.js"))),
 			tags$head(tags$style(HTML("#vfile tbody {  padding: 1px 2px 1px 2px; font-family: Arial; font-weight:normal; font-size:x-small}"))),
-			actionButton("vreset","Reset Gene Filters",class="btn-black btn-sm"),	
 			tabsetPanel(type="pills",
 			#Generic Table View
 			tabPanel("Table",
