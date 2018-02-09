@@ -5,6 +5,7 @@ library(data.table)
 library(googleVis)
 library(ggplot2)
 library(rjson)
+library(countup)
 
 readGEMINI_<-function(x) {
     if (grepl("\\.gz$",x)) {
@@ -42,7 +43,7 @@ genericNGSUI<-function(id){
   )
 }
 
-genericNGSTestApp<-function(){
+genericNGSTestApp<-function(...){
   library(shiny)
   library(DT)
   library(shinyjs)
@@ -51,20 +52,16 @@ genericNGSTestApp<-function(){
   library(ggplot2)
   library(rjson)
   options(shiny.maxRequestSize=100*1024^2) 
-  choices=c("guess","csv","vtbl","html","pdf","vcf","vcf.gz","tsv")
-  
+
     app <- shinyApp(
       ui=fluidPage(
         genericNGSUI("gt")
       ),
       server = function(input, output,session) {
-    
-      
         callModule(genericNGS,"gt")
-      
-        
+
       })
-    runApp(app)
+    runApp(app,...)
   
   
 }
@@ -252,8 +249,28 @@ output$fileViewPage<-renderUI({
 			fluidRow(
 				uiOutput(ns("vtblannoviewer"))
 			)
-			)
-
+			),tabPanel("Stats",
+			  fluidRow(			        
+			    column(3,
+			           div(class="box box-info",
+			               h3("Variants"),
+			               div(countupOutput(ns("varcount")),style="font-size:80px")
+			           )
+			     ),
+			    column(3,
+			           div(class="box box-info",
+			               h3("Genes"),
+			               div(countupOutput(ns("genecount")),style="font-size:80px")
+			           )
+			    ),
+			    column(3,
+			           div(class="box box-info",
+			               h3("Average Depth"),
+			               div(countupOutput(ns("avgqual")),style="font-size:80px")
+			           )
+			    )
+			    )
+			  )	 
 		)
 		),style="overflow-x:scroll;"
 		)
@@ -286,6 +303,38 @@ output$fileViewPage<-renderUI({
 #Hides/toggles table in igv view
 shinyjs::onclick("hidevsel",shinyjs::toggle(id = "igvvarselector", anim = FALSE))
 shinyjs::onclick("closevsel",shinyjs::toggle(id = "igvvarselector", anim = FALSE))
+
+
+output$genecount<-renderCountup({
+  opts = list(
+    useEasing = TRUE, 
+    useGrouping = TRUE, 
+    separator = ',', 
+    decimal = '.'
+  )
+  countup(length(unique(getTableViewData()$Gene_Name)),options=opts)
+})
+
+output$varcount<-renderCountup({
+  opts = list(
+    useEasing = TRUE, 
+    useGrouping = TRUE, 
+    separator = ',', 
+    decimal = '.'
+  )
+  countup(length(getTableViewData()$Gene_Name),options=opts)
+})
+
+
+output$avgqual<-renderCountup({
+  opts = list(
+    useEasing = TRUE, 
+    useGrouping = TRUE, 
+    separator = ',', 
+    decimal = '.'
+  )
+  countup(sprintf("%.2f",mean(getTableViewData()$DP)),options=opts)
+})
 
 
 #Variant table UI
