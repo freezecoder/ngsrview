@@ -66,7 +66,7 @@ genericNGSTestApp<-function(...){
   
 }
 
-genericNGS<-function(input,output,session,dat=NULL) {
+genericNGS<-function(input,output,session) {
   
   output$ui<-renderUI({
     ns=session$ns
