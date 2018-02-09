@@ -1,11 +1,36 @@
-library(shiny)
-library(DT)
-library(shinyjs)
-library(data.table)
-library(googleVis)
-library(ggplot2)
-library(rjson)
-library(countup)
+
+vtableCSS<-function(){
+  vtcss="
+  padding: 1px 2px 1px 2px;
+  font-family: tahoma;
+  font-weight: normal;
+  position: relative;
+  clear: both;
+  *zoom: 1;
+  zoom: 1;
+  border-top: 1px solid #ddd;
+  font-size: x-small;
+  "
+  return(vtcss)
+}
+
+#fucntion to make gene summary table
+vtGeneSummaryTable<-function(x){
+  x$AC=as.numeric(x$AC)
+  x$Coverage=as.numeric(x$DP)
+  r=x[,by="Gene_Name",list(
+    Variants=length(unique(Amino_Acid_Change)),
+    High_Impact=length(grep("HIGH",Effect_Impact,value=T)),
+    Clinvar_Drug_Or_Pathogenic=length(grep("drug|patho",clinvar_sig,value=T)),
+    Known_Somatic_In_Cosmic=length(grep("COSM",cosmic_ids,value=T)),
+    Frame_Affecting_Indels=length(grep("frameshift|disruptive|frame_shift",Type,ignore.case=T,value=T)),
+    Silent_SNVs=length(grep("nonsyn|non_syn|silent",Type,value=T,ignore.case=T)),
+    Average_Depth=round(mean(Coverage),digits=2),
+    Avg_AlleleFraction=round(mean(100*AC/Coverage),digits=2),
+    Amino_Acid_Changes=paste(head(unique(Amino_Acid_Change),12),collapse=",")
+  )][order(-Clinvar_Drug_Or_Pathogenic)]
+  return(r)
+}
 
 readGEMINI_<-function(x) {
     if (grepl("\\.gz$",x)) {
@@ -51,6 +76,7 @@ genericNGSTestApp<-function(...){
   library(googleVis)
   library(ggplot2)
   library(rjson)
+  library(countup)
   options(shiny.maxRequestSize=100*1024^2) 
 
     app <- shinyApp(
@@ -136,7 +162,7 @@ getTableViewData<-reactive({
 	      #regular VCF
 		  	DF <- fread(sprintf("bash opt/printVCF.sh %s",dest),sep="\t")	
 		} else if (  grepl("\\.vtbl.tsv",fname) ) {
-			  showNotification(sprintf("VCFAnno Vtable Annotation format detected in %s",dest))
+			  showNotification(sprintf("VCFAnno Vtable Annotation format detected in %s",fname))
 		  	if (grepl(".gz",fname)) {
 			  	#read gzipped file
 			  	DF <- suppressWarnings(fread(sprintf("gunzip -dc %s",dest)))
@@ -270,7 +296,10 @@ output$fileViewPage<-renderUI({
 			           )
 			    )
 			    )
-			  )	 
+			  ),
+			tabPanel("Session",
+			    htmlOutput(ns("sess"))         
+			)
 		)
 		),style="overflow-x:scroll;"
 		)
@@ -300,6 +329,12 @@ output$fileViewPage<-renderUI({
 	
 	
 })
+
+output$sess<-renderPrint({
+#  paste(sessionInfo("ngsrview"),collapse="\n")
+  capture.output(sessionInfo())
+})
+
 #Hides/toggles table in igv view
 shinyjs::onclick("hidevsel",shinyjs::toggle(id = "igvvarselector", anim = FALSE))
 shinyjs::onclick("closevsel",shinyjs::toggle(id = "igvvarselector", anim = FALSE))
@@ -353,9 +388,10 @@ output$vtblannoviewer<-renderUI({
   numerics=c(numerics,aafs)
   charnms=names(dat[, .SD, .SDcols = sapply(dat, is.character)])
   charnms=grep("aaf|ac",charnms,value=T,invert=T)
-  
-  if (  grepl("\\.vtbl.tsv$|\\.vtbl.tsv.gz$|anno.vcf.gz$|\\.gemini",dest) ) {
-    fluidPage(
+
+    if (  grepl("\\.vtbl.tsv$|\\.vtbl.tsv.gz$|anno.vcf.gz$|\\.gemini",dest) ) {
+      print(names(dat))
+        fluidPage(
       selectInput(ns("vselectedgene"),label="Choose Gene",multiple=T,selected=NULL,choices=unique(dat$Gene_Name)),
       tags$head(tags$style(HTML("#vtgenefreqtable tbody {   font-weight:normal; font-size:x-small;  }"))),
       tags$head(tags$style(HTML("#vtgeneclasstable tbody {  padding: 1px 2px 1px 2px; font-family: tahoma; font-weight:normal; font-size:x-small}"))),
@@ -421,20 +457,7 @@ output$vtblannoviewer<-renderUI({
 
 # panels 
 #Custom css for these tables
-vtableCSS<-function(){
-vtcss="
-    padding: 1px 2px 1px 2px;
-    font-family: tahoma;
-    font-weight: normal;
-    position: relative;
-       clear: both;
-     *zoom: 1;
-     zoom: 1;
-     border-top: 1px solid #ddd;
-     font-size: x-small;
-"
-return(vtcss)
-}
+
 
 
 
@@ -444,23 +467,7 @@ observeEvent(input$vreset, {
 	session$sendCustomMessage(type = "vresetValue", message = "vselectedgene")
  })
 
-#fucntion to make gene summary table
-vtGeneSummaryTable<-function(DF){
-	DF$AC=as.numeric(DF$AC)
-	DF$Coverage=as.numeric(DF$DP)
-	x=DF[,by="Gene_Name",list(
-		Variants=length(unique(Amino_Acid_Change)),
-		High_Impact=length(grep("HIGH",Effect_Impact,value=T)),
-		Clinvar_Drug_Or_Pathogenic=length(grep("drug|patho",clinvar_sig,value=T)),
-		Known_Somatic_In_Cosmic=length(grep("COSM",cosmic_ids,value=T)),
-		Frame_Affecting_Indels=length(grep("frameshift|disruptive|frame_shift",Type,ignore.case=T,value=T)),
-		Silent_SNVs=length(grep("nonsyn|non_syn|silent",Type,value=T,ignore.case=T)),
-		Average_Depth=round(mean(Coverage),digits=2),
-		Avg_AlleleFraction=round(mean(100*AC/Coverage),digits=2),
-		Amino_Acid_Changes=paste(head(unique(Amino_Acid_Change),12),collapse=",")
-		)][order(-Clinvar_Drug_Or_Pathogenic)]
-	return(x)
-}
+
 
 #Download the gene summary file
 output$vtgenedownload <- downloadHandler(
