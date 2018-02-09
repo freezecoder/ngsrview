@@ -496,9 +496,13 @@ filtgetTableViewData<-reactive({
 
 #First gene clickable table view - uses and displays unfiltered data
 output$vtgenefreqtable<-DT::renderDataTable({
-	DF=getTableViewData()
-	DF=subset(DF,grepl("\\S",Amino_Acid_Change,perl=T))
-	sdf=vtGeneSummaryTable(DF)
+	d=getTableViewData()
+	
+	if ("Amino_Acid_Change" %in% names(d)) {
+  	d=subset(d,grepl("\\S",Amino_Acid_Change,perl=T))
+	}
+	
+	sdf=vtGeneSummaryTable(d)
 	#correlation analysis,but need a group variable
 	#saveRDS(sdf,"genestat.rds")
 	#ggpairs(subset(dat,select=-Gene_Name))
