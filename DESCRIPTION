@@ -5,7 +5,6 @@ Authors@R: person("First", "Last", email = "zayed@ng.com", role = c("aut", "cre"
 Description: A bioinformatics file format views, from TSV to Gemini and AnnoVCF formats as well as snpEff.
 Depends: R (>= 3.4.2)
 Suggests: DT, shiny, data.table, shinyjs, rjson, googleVis, ggplot2, countup
-Imports: DT, shiny, data.table, shinyjs, rjson, googleVis, ggplot2, countup
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
