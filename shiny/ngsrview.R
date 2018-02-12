@@ -399,7 +399,7 @@ output$vtblannoviewer<-renderUI({
   charnms=grep("aaf|ac",charnms,value=T,invert=T)
   input$resetview #if triggreed will reset
     if (  grepl("\\.vtbl.tsv$|\\.vtbl.tsv.gz$|anno.vcf.gz$|\\.gemini",dest) ) {
-     # print(names(dat))
+      print(names(dat))
         fluidPage(
       selectInput(ns("vselectedgene"),label="Choose Gene",multiple=T,selected=NULL,choices=unique(dat$Gene_Name)),
       tags$head(tags$style(HTML("#vtgenefreqtable tbody {   font-weight:normal; font-size:x-small;  }"))),
